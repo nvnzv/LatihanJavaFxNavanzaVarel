@@ -1,0 +1,53 @@
+package Model;
+
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
+/**
+ * Model class untuk data Mobil
+ * Menggunakan JavaFX Properties untuk binding dengan TableView
+ */
+public class Mobil {
+    private final StringProperty kodeMobil;
+    private final StringProperty brandMobil;
+
+    // Constructor
+    public Mobil(String kodeMobil, String brandMobil) {
+        this.kodeMobil = new SimpleStringProperty(kodeMobil);
+        this.brandMobil = new SimpleStringProperty(brandMobil);
+    }
+
+    // Getter untuk kodeMobil
+    public String getKodeMobil() {
+        return kodeMobil.get();
+    }
+
+    public StringProperty kodeMobilProperty() {
+        return kodeMobil;
+    }
+
+    public void setKodeMobil(String kodeMobil) {
+        this.kodeMobil.set(kodeMobil);
+    }
+
+    // Getter untuk brandMobil
+    public String getBrandMobil() {
+        return brandMobil.get();
+    }
+
+    public StringProperty brandMobilProperty() {
+        return brandMobil;
+    }
+
+    public void setBrandMobil(String brandMobil) {
+        this.brandMobil.set(brandMobil);
+    }
+
+    @Override
+    public String toString() {
+        return "Mobil{" +
+                "kodeMobil='" + kodeMobil.get() + '\'' +
+                ", brandMobil='" + brandMobil.get() + '\'' +
+                '}';
+    }
+}
