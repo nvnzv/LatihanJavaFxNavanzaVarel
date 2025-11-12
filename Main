@@ -1,0 +1,70 @@
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import java.net.URL;
+
+/**
+ * Main Application Class untuk Aplikasi Manajemen Data Mobil
+ */
+public class Main extends Application {
+    
+    @Override
+    public void start(Stage primaryStage) {
+        try {
+            System.out.println("=== Starting Aplikasi Manajemen Data Mobil ===");
+            
+            // Coba beberapa path alternatif untuk FXML
+            URL fxmlLocation = null;
+            String[] paths = {
+                "/View/MobilView.fxml",     // Path 1 (standard resources)
+                "View/MobilView.fxml",      // Path 2 (tanpa leading slash)
+                "/MobilView.fxml",          // Path 3 (root resources)
+                "MobilView.fxml"            // Path 4 (current directory)
+            };
+            
+            for (String path : paths) {
+                fxmlLocation = getClass().getResource(path);
+                if (fxmlLocation != null) {
+                    System.out.println("✓ FXML ditemukan di: " + path);
+                    break;
+                } else {
+                    System.out.println("✗ FXML tidak ditemukan di: " + path);
+                }
+            }
+            
+            if (fxmlLocation == null) {
+                System.err.println("\n=== ERROR: File MobilView.fxml tidak ditemukan! ===");
+                System.err.println("Pastikan file berada di salah satu lokasi:");
+                System.err.println("  1. src/main/resources/View/MobilView.fxml");
+                System.err.println("  2. src/main/resources/MobilView.fxml");
+                return;
+            }
+            
+            // Load FXML
+            FXMLLoader loader = new FXMLLoader(fxmlLocation);
+            Parent root = loader.load();
+            
+            // Setup Scene dengan ukuran sesuai FXML (600x400)
+            Scene scene = new Scene(root, 600, 400);
+            
+            // Setup Stage
+            primaryStage.setTitle("Aplikasi Manajemen Data Mobil");
+            primaryStage.setScene(scene);
+            primaryStage.setResizable(false); // Tidak bisa di-resize
+            primaryStage.show();
+            
+            System.out.println("✓ Aplikasi berhasil dijalankan!");
+            
+        } catch (Exception e) {
+            System.err.println("\n=== ERROR saat load aplikasi ===");
+            e.printStackTrace();
+            System.err.println("\nDetail error: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}
