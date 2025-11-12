@@ -1,0 +1,282 @@
+package Controller;
+
+import Model.Mobil;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+
+import java.net.URL;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
+/**
+ * Controller untuk mengelola CRUD Data Mobil
+ * Nama controller tetap MahasiswaController sesuai FXML yang diberikan
+ */
+public class MobilController implements Initializable {
+
+    // FXML Components - Input Fields
+    @FXML
+    private TextField txtKode;
+
+    @FXML
+    private TextField txtBrand;
+
+    // FXML Components - TableView
+    @FXML
+    private TableView<Mobil> tvMobil;
+
+    @FXML
+    private TableColumn<Mobil, String> colKodeMobil;  // Nama tetap colNim sesuai FXML
+
+    @FXML
+    private TableColumn<Mobil, String> colBrandMobil; // Nama tetap colNama sesuai FXML
+
+    // ObservableList untuk menyimpan data mobil
+    private ObservableList<Mobil> mobilList = FXCollections.observableArrayList();
+
+    // Variable untuk menyimpan mobil yang sedang dipilih
+    private Mobil selectedMobil = null;
+
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        // Setup TableView columns - bind ke property Mobil
+        colKodeMobil.setCellValueFactory(new PropertyValueFactory<>("kodeMobil"));
+        colBrandMobil.setCellValueFactory(new PropertyValueFactory<>("brandMobil"));
+
+        // Set data ke TableView
+        tvMobil.setItems(mobilList);
+
+        // Tambahkan listener untuk selection di TableView
+        tvMobil.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    if (newValue != null) {
+                        selectedMobil = newValue;
+                        populateFields(newValue);
+                    }
+                }
+        );
+
+        // Tambahkan data dummy untuk testing
+        addDummyData();
+
+        System.out.println("✓ Controller initialized successfully!");
+    }
+
+    /**
+     * Menambahkan data dummy untuk testing
+     */
+    private void addDummyData() {
+        mobilList.add(new Mobil("M001", "Toyota Avanza"));
+        mobilList.add(new Mobil("M002", "Honda CR-V"));
+        mobilList.add(new Mobil("M003", "Mitsubishi Pajero"));
+        mobilList.add(new Mobil("M004", "Suzuki Ertiga"));
+    }
+
+    /**
+     * Handler untuk tombol Add
+     */
+    @FXML
+    private void handleAddMobil() {
+        if (validateInput()) {
+            String kode = txtKode.getText().trim();
+
+            // Cek apakah kode mobil sudah ada
+            if (isKodeMobilExists(kode)) {
+                showAlert("Error", "Kode mobil sudah ada!", Alert.AlertType.ERROR);
+                txtKode.requestFocus();
+                return;
+            }
+
+            String brand = txtBrand.getText().trim();
+
+            // Buat object Mobil baru
+            Mobil mobilBaru = new Mobil(kode, brand);
+
+            // Tambahkan ke ObservableList
+            mobilList.add(mobilBaru);
+
+            // Clear form dan refresh
+            clearForm();
+            showAlert("Sukses", "Data mobil berhasil ditambahkan!", Alert.AlertType.INFORMATION);
+            tvMobil.refresh();
+
+            System.out.println("✓ Data ditambahkan: " + mobilBaru);
+        }
+    }
+
+    /**
+     * Handler untuk tombol Edit
+     */
+    @FXML
+    private void handleEditMobil() {
+        if (selectedMobil == null) {
+            showAlert("Warning", "Pilih data mobil yang ingin diedit terlebih dahulu!", Alert.AlertType.WARNING);
+            return;
+        }
+
+        if (validateInput()) {
+            // Konfirmasi edit
+            Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmAlert.setTitle("Konfirmasi Edit");
+            confirmAlert.setHeaderText("Edit Data Mobil");
+            confirmAlert.setContentText("Apakah Anda yakin ingin mengubah data mobil ini?");
+
+            Optional<ButtonType> result = confirmAlert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                String kodeNew = txtKode.getText().trim();
+
+                // Cek jika kode mobil diubah dan sudah ada di list
+                if (!selectedMobil.getKodeMobil().equals(kodeNew) && isKodeMobilExists(kodeNew)) {
+                    showAlert("Error", "Kode mobil sudah digunakan!", Alert.AlertType.ERROR);
+                    txtKode.requestFocus();
+                    return;
+                }
+
+                // Update data mobil yang dipilih
+                selectedMobil.setKodeMobil(kodeNew);
+                selectedMobil.setBrandMobil(txtBrand.getText().trim());
+
+                // Refresh TableView
+                tvMobil.refresh();
+                clearForm();
+                showAlert("Sukses", "Data mobil berhasil diupdate!", Alert.AlertType.INFORMATION);
+
+                System.out.println("✓ Data diupdate: " + selectedMobil);
+            }
+        }
+    }
+
+    /**
+     * Handler untuk tombol Delete
+     */
+    @FXML
+    private void handleDeleteMobil() {
+        if (selectedMobil == null) {
+            showAlert("Warning", "Pilih data mobil yang ingin dihapus terlebih dahulu!", Alert.AlertType.WARNING);
+            return;
+        }
+
+        // Konfirmasi delete
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Konfirmasi Hapus");
+        confirmAlert.setHeaderText("Hapus Data Mobil");
+        confirmAlert.setContentText("Apakah Anda yakin ingin menghapus mobil: " 
+                + selectedMobil.getBrandMobil() + " (" + selectedMobil.getKodeMobil() + ")?");
+
+        Optional<ButtonType> result = confirmAlert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            String brandMobil = selectedMobil.getBrandMobil();
+            mobilList.remove(selectedMobil);
+            clearForm();
+            showAlert("Sukses", "Data mobil berhasil dihapus: " + brandMobil, Alert.AlertType.INFORMATION);
+            tvMobil.refresh();
+
+            System.out.println("✓ Data dihapus: " + brandMobil);
+        }
+    }
+
+    /**
+     * Membersihkan form input
+     */
+    private void clearForm() {
+        txtKode.clear();
+        txtBrand.clear();
+        tvMobil.getSelectionModel().clearSelection();
+        selectedMobil = null;
+        txtKode.requestFocus();
+    }
+
+    /**
+     * Mengisi form dengan data mobil yang dipilih
+     */
+    private void populateFields(Mobil mobil) {
+        txtKode.setText(mobil.getKodeMobil());
+        txtBrand.setText(mobil.getBrandMobil());
+    }
+
+    /**
+     * Validasi input form
+     */
+    private boolean validateInput() {
+        // Validasi Kode Mobil
+        if (txtKode.getText().trim().isEmpty()) {
+            showAlert("Error", "Kode mobil tidak boleh kosong!", Alert.AlertType.ERROR);
+            txtKode.requestFocus();
+            return false;
+        }
+
+        // Validasi format kode (contoh: M001, M002)
+        String kode = txtKode.getText().trim();
+        if (!kode.matches("^[A-Z]\\d{3}$")) {
+            showAlert("Error", 
+                    "Format kode mobil tidak valid!\n" +
+                    "Format yang benar: M001, M002, dst.\n" +
+                    "(1 huruf besar + 3 angka)", 
+                    Alert.AlertType.ERROR);
+            txtKode.requestFocus();
+            return false;
+        }
+
+        // Validasi Brand Mobil
+        if (txtBrand.getText().trim().isEmpty()) {
+            showAlert("Error", "Brand mobil tidak boleh kosong!", Alert.AlertType.ERROR);
+            txtBrand.requestFocus();
+            return false;
+        }
+
+        // Validasi panjang brand minimal 3 karakter
+        if (txtBrand.getText().trim().length() < 3) {
+            showAlert("Error", "Brand mobil minimal 3 karakter!", Alert.AlertType.ERROR);
+            txtBrand.requestFocus();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Cek apakah kode mobil sudah ada
+     */
+    private boolean isKodeMobilExists(String kode) {
+        for (Mobil mobil : mobilList) {
+            if (mobil.getKodeMobil().equalsIgnoreCase(kode)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Menampilkan alert dialog
+     */
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Method untuk mendapatkan jumlah mobil (bisa dipanggil dari luar)
+     */
+    public int getJumlahMobil() {
+        return mobilList.size();
+    }
+
+    /**
+     * Method untuk mencari mobil berdasarkan kode
+     */
+    public Mobil getMobilByKode(String kode) {
+        for (Mobil mobil : mobilList) {
+            if (mobil.getKodeMobil().equalsIgnoreCase(kode)) {
+                return mobil;
+            }
+        }
+        return null;
+    }
+}
